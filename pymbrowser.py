@@ -2,19 +2,43 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
-#import signal
+import signal
+import shutil
 #from PyQt4 import QtCore, QtGui, QtSql, Qt
 #from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import *
 
-#class Tree(QTreeView):
+class Tree(QTreeView):
 
-	#def __init__(self):
-		#QTreeView.__init__(self)
+	def __init__(self):
+		QTreeView.__init__(self)
 		
-	#def keyPressEvent (self, QKeyEvent e)
+	def keyPressEvent (self, e):
+		if e.key() == 16777223:
+		
+			path = unicode(self.model().fileInfo(self.currentIndex()).absoluteFilePath())
+			if os.path.isdir(path):
+				type = "directory"
+			else:
+				type = "file"
+			
+			msgBox = QMessageBox()
+			msgBox.setText("Do you want to delete the "+ type +"\n"+ path);
+			msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No);
+			msgBox.setDefaultButton(QMessageBox.No)
+			ret = msgBox.exec_()
+			
+			if ret == QMessageBox.Yes:				
+				if os.path.isdir(path):
+					shutil.rmtree(path)
+				else:
+					os.unlink(path)
+					
+				self.model().refresh()			
+		else:
+			QTreeView.keyPressEvent(self, e)
 		
 	
 
@@ -60,7 +84,7 @@ class App(QApplication):
 		self.dirmodel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot)
 		self.dirmodel.setNameFilters(['*.mpg', '*.wmv', '*.avi', '*.iso', '*.mkv'])
 		
-		self.dirtree = QTreeView()
+		self.dirtree = Tree()
 		self.dirtree.setModel(self.dirmodel)
 		#self.dirtree.setRootIndex(self.dirmodel.index(QDir.currentPath()))
 		self.dirtree.setRootIndex(self.dirmodel.index("/home/yoda/share/"))
@@ -71,7 +95,7 @@ class App(QApplication):
 		self.dirtree.header().hide()
 		self.dirtree.setFont(QFont("Gill Sans", 60))
 		self.dirtree.setIndentation(30)
-		#self.dirtree.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+		self.dirtree.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 		self.dirtree.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 		self.dirtree.setFrameStyle(QFrame.NoFrame)
 		self.dirtree.setIconSize(QSize(100, 100))
@@ -94,8 +118,9 @@ class App(QApplication):
 			os.spawnvp(os.P_NOWAIT, 'cvlc', L)
 			#os.system('wmctrl -r "VLC My Video Output" -b add,above')
 		
+		
 if __name__ == "__main__":
+	signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 	app = App(sys.argv)
-	
-	sys.exit(app.exec_())
+	app.exec_()
