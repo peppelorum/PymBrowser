@@ -10,10 +10,27 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import *
 
+import settings
+
+class NoFocusDelegate(QStyledItemDelegate):
+
+	def paint(self, painter, option, index):
+		itemOption = QStyleOptionViewItem(option)
+		if itemOption.state & QStyle.State_HasFocus:
+			itemOption.state ^= QStyle.State_HasFocus
+
+		QStyledItemDelegate.paint(self, painter, itemOption, index)
+
+
 class Tree(QTreeView):
 
 	def __init__(self):
+
 		QTreeView.__init__(self)
+		self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+
+		delegate = NoFocusDelegate()
+		self.setItemDelegate(delegate)
 		
 	def keyPressEvent (self, e):
 		if e.key() == 16777223:
@@ -53,7 +70,8 @@ class App(QApplication):
 		self.timer = QTimer()
 		self.connect(self.timer, SIGNAL('timeout()'), self.update)
 		#self.connect(self.dirtree, SIGNAL('activated(QModelIndex)'), self.startItemInPlayer)
-		self.timer.start(300000)
+		#self.timer.start(300000)
+		self.timer.start(settings.REFRESH_RATE * 600)
 		
 	def update(self):
 		#print "."
@@ -73,11 +91,23 @@ class App(QApplication):
 		self.window.setCentralWidget(self.main)
 		
 		self.window.setStyleSheet (" \
-                QTreeView {background: #201F21; color: #D9D9D9; font-size: 36px} \
-                QTreeView::item:selected {background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #4F4E50, stop: 1 #201F21); \
-		border: 0px solid #000; outline: none;} \
-		QTreeView::branch { background: #201F21; color: #201F21 } \
-") 
+                QTreeView { \
+                	background: #201F21; \
+                	color: #D9D9D9; \
+                	font-size: 36px; \
+                	show-decoration-selected: 0; \
+                } \
+                QTreeView::item:selected { \
+                	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #4F4E50, stop: 1 #201F21); \
+					border: 2px solid #201F21; \
+					outline: none; \
+					border-radius: 8px; \
+				} \
+				QTreeView::branch { \
+					background: #201F21; \
+					color: #201F21 \
+				} \
+		") 
 		
 		self.dirmodel = QDirModel()
 		self.dirmodel.setSorting(QDir.DirsFirst)
@@ -87,7 +117,7 @@ class App(QApplication):
 		self.dirtree = Tree()
 		self.dirtree.setModel(self.dirmodel)
 		#self.dirtree.setRootIndex(self.dirmodel.index(QDir.currentPath()))
-		self.dirtree.setRootIndex(self.dirmodel.index("/home/yoda/share/"))
+		self.dirtree.setRootIndex(self.dirmodel.index(settings.BASE_DIR))
 		
 		self.dirtree.hideColumn(1)
 		self.dirtree.hideColumn(2)
@@ -104,7 +134,7 @@ class App(QApplication):
 		
 		self.mainLayout.addWidget(self.dirtree)
 		self.window.resize(1000, 700)
-		self.window.showFullScreen()
+		#self.window.showFullScreen()
 
 		self.window.show()
 	
