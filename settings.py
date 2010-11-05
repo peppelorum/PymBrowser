@@ -12,3 +12,6 @@ VLC = 'vlc'
 
 #The time in minutes to check for updates in BASE_DIR
 REFRESH_RATE = 10
+
+#All the filetypes you want to be able to view and play
+FILETYPES = ['*.mpg', '*.wmv', '*.avi', '*.iso', '*.mkv']
