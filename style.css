@@ -1,7 +1,7 @@
 QTreeView {
 	background: #201F21; 
 	color: #D9D9D9; 
-	font-size: 36px; 
+	font-size: 26px; 
 	show-decoration-selected: 0; 
 } 
 QTreeView::item:selected { 

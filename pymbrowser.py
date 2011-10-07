@@ -39,7 +39,7 @@ class Tree(QTreeView):
         print e.key()
         #if e.key() == 16777216:
         #	sys.exit()
-        print self.currentIndex().data().toString()
+#        print self.currentIndex().data().toString()
         path = unicode(self.model().fileInfo(self.currentIndex()).absoluteFilePath())
 
         if e.key() == 16777223:
@@ -154,8 +154,15 @@ class App(QApplication):
         self.newfiles.setModel(QStringListModel(self.newfilesDB))
         self.newfiles.hide()
 
+        print 'sys.argv[0] =', sys.argv[0]             
+        pathname = os.path.dirname(sys.argv[0])        
+#        pathname = os.path.dirname("style.css")
+        full_path = os.path.abspath(pathname)
+        print 'path =', pathname
+        print 'full path =', os.path.abspath(pathname)
+
     	
-    	css_file = open("style.css", "r")
+    	css_file = open(full_path +"/style.css", "r")
     	css = css_file.read()
     	css_file.close()
 
@@ -163,7 +170,7 @@ class App(QApplication):
     	self.main.setStyleSheet(css)
     	
     	self.dirmodel = QDirModel()
-    	self.dirmode.setSorting(QDir.DirsFirst)
+    	self.dirmodel.setSorting(QDir.DirsFirst | QDir.IgnoreCase)
     	self.dirmodel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot)
     	self.dirmodel.setNameFilters(settings.FILETYPES)
     	
@@ -181,7 +188,7 @@ class App(QApplication):
     	self.dirtree.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     	self.dirtree.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     	self.dirtree.setFrameStyle(QFrame.NoFrame)
-    	self.dirtree.setIconSize(QSize(100, 100))
+    	self.dirtree.setIconSize(QSize(60, 60))
     	
     	self.connect(self.dirtree, SIGNAL('activated(QModelIndex)'), self.startItemInPlayer)
 
@@ -197,9 +204,12 @@ class App(QApplication):
 
     	self.window.installEventFilter(self)
     	#self.window.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint)
-    	#self.main.showMaximized()
+    	self.window.showMaximized()
 
     	self.window.show()
+	#self.window.showFullScreen()
+
+        self.dirtree.setFocus()
 
 
     	self.connect(self.button, SIGNAL('clicked()'), self.togglePlaylist)
@@ -248,13 +258,15 @@ class App(QApplication):
 
 
     def startItemInPlayer(self, i):
-    	#print "fil", self.dirmodel.filePath(i)
-    	if not self.dirmodel.isDir(i):
+	
+    	print "fil", i, self.dirmodel.filePath(i), str(self.dirmodel.filePath(i)).find('VIDEO_TS')
+		
+    	if not self.dirmodel.isDir(i) or str(self.dirmodel.filePath(i)).find('VIDEO_TS'):
     		os.system("killall vlc")
     		self.addToPlayed(unicode(self.dirmodel.filePath(i)))
     		#L = ['vlc', '-f', '--video-on-top', '--no-show-intf',  str(self.dirmodel.filePath(i)), 'vlc:quit']
-    		L = ['cvlc', '-I lirc', '-f', unicode(self.dirmodel.filePath(i))]
-    		#L = ['vlc', '-f', str(self.dirmodel.filePath(i))]
+    		#L = ['cvlc', '-I lirc', '-f', unicode(self.dirmodel.filePath(i))]
+    		L = ['vlc', '-f', unicode(self.dirmodel.filePath(i))]
     		os.spawnvp(os.P_NOWAIT, 'cvlc', L)
     		#os.system('wmctrl -r "VLC My Video Output" -b add,above')
     	
